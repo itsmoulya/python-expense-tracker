@@ -1,55 +1,90 @@
 import json
 import os
+from datetime import datetime
 
 FILE_NAME = "expenses.json"
 
-if os.path.exists(FILE_NAME):
-    with open(FILE_NAME, "r") as file:
-        expenses = json.load(file)
-else:
-    expenses = []
+
+def load_expenses():
+    if os.path.exists(FILE_NAME):
+        try:
+            with open(FILE_NAME, "r") as file:
+                return json.load(file)
+        except (json.JSONDecodeError, OSError):
+            print("Could not read saved expenses.")
+    return []
+
+
+def save_expenses(expenses):
+    with open(FILE_NAME, "w") as file:
+        json.dump(expenses, file, indent=4)
+
+
+expenses = load_expenses()
 
 while True:
     print("\n===== EXPENSE TRACKER =====")
     print("1. Add Expense")
     print("2. View Expenses")
     print("3. Calculate Total")
-    print("4. Exit")
+    print("4. Monthly Report")
+    print("5. Exit")
 
     choice = input("Enter your choice: ")
 
     if choice == "1":
-        name = input("Enter expense name: ")
+        name = input("Expense name: ")
+        category = input("Category (Food/Travel/Books/Other): ")
 
         try:
-            amount = float(input("Enter amount: "))
-
+            amount = float(input("Amount: "))
             if amount <= 0:
                 print("Amount must be greater than zero.")
                 continue
 
-            expenses.append([name, amount])
+            expense = {
+                "name": name,
+                "category": category,
+                "amount": amount,
+                "date": datetime.now().strftime("%Y-%m-%d")
+            }
 
-            with open(FILE_NAME, "w") as file:
-                json.dump(expenses, file, indent=4)
-
-            print("Expense added and saved!")
+            expenses.append(expense)
+            save_expenses(expenses)
+            print("Expense saved successfully!")
 
         except ValueError:
-            print("Please enter a valid number.")
+            print("Enter a valid amount.")
 
     elif choice == "2":
         if not expenses:
             print("No expenses recorded.")
         else:
-            for expense in expenses:
-                print(expense[0], "-", expense[1])
+            for item in expenses:
+                print(
+                    item["date"], "|",
+                    item["name"], "|",
+                    item["category"], "| ₹",
+                    item["amount"]
+                )
 
     elif choice == "3":
-        total = sum(expense[1] for expense in expenses)
-        print("Total expenses:", total)
+        total = sum(item["amount"] for item in expenses)
+        print("Total expenses: ₹", round(total, 2))
 
     elif choice == "4":
+        month = datetime.now().strftime("%Y-%m")
+        monthly = [
+            item for item in expenses
+            if item["date"].startswith(month)
+        ]
+        total = sum(item["amount"] for item in monthly)
+
+        print("Monthly report:", month)
+        print("Number of expenses:", len(monthly))
+        print("Total spent: ₹", round(total, 2))
+
+    elif choice == "5":
         print("Thank you!")
         break
 
