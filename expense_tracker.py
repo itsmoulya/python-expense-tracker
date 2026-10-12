@@ -1,4 +1,13 @@
-expenses = []
+import json
+import os
+
+FILE_NAME = "expenses.json"
+
+if os.path.exists(FILE_NAME):
+    with open(FILE_NAME, "r") as file:
+        expenses = json.load(file)
+else:
+    expenses = []
 
 while True:
     print("\n===== EXPENSE TRACKER =====")
@@ -11,21 +20,33 @@ while True:
 
     if choice == "1":
         name = input("Enter expense name: ")
-        amount = float(input("Enter amount: "))
-        expenses.append([name, amount])
-        print("Expense added successfully!")
+
+        try:
+            amount = float(input("Enter amount: "))
+
+            if amount <= 0:
+                print("Amount must be greater than zero.")
+                continue
+
+            expenses.append([name, amount])
+
+            with open(FILE_NAME, "w") as file:
+                json.dump(expenses, file, indent=4)
+
+            print("Expense added and saved!")
+
+        except ValueError:
+            print("Please enter a valid number.")
 
     elif choice == "2":
-        if len(expenses) == 0:
+        if not expenses:
             print("No expenses recorded.")
         else:
             for expense in expenses:
                 print(expense[0], "-", expense[1])
 
     elif choice == "3":
-        total = 0
-        for expense in expenses:
-            total += expense[1]
+        total = sum(expense[1] for expense in expenses)
         print("Total expenses:", total)
 
     elif choice == "4":
